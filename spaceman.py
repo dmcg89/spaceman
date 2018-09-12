@@ -1,64 +1,80 @@
 import requests
 import random
+import re
 
-word_site = "http://svnweb.freebsd.org/csrg/share/dict/words?view=co&content-type=text/plain"
-response = requests.get(word_site)
-words = response.content.splitlines()
-random_word = random.choice(words)
-slicelength = len(random_word)
-
-print(slicelength)
-print(random_word)
-# secret_word = (str(random_word))[2:slicelength + 2]
-
-secret_word = "lololololo"
-
-
-wordlength = len(secret_word)
-
+# word_site = "http://svnweb.freebsd.org/csrg/share/dict/words?view=co&content-type=text/plain"
+# response = requests.get(word_site)
+# words = response.content.splitlines()
+# random_word = random.choice(words)
+# slicelength = len(random_word)
 guessed_letters = []
-
-correct_guess = []
-
-empty_guess = "_ "
+guesses=10
 
 
-print(secret_word)
 
+def chooseWord():
+    word_site = "http://svnweb.freebsd.org/csrg/share/dict/words?view=co&content-type=text/plain"
+    response = requests.get(word_site)
+    words = response.content.splitlines()
+    random_word = random.choice(words)
+    slicelength = len(random_word)
+    global secret_word
+    secret_word = (str(random_word))[2:slicelength + 2]
+    global word_length
+    word_length = len(secret_word)
 
-# correct_guess = ''.join ([empty_guess * wordlength])
+def correctGuesses(word_length):
+    global empty_guess
+    empty_guess = "_ "
+    global correct_guess
+    correct_guess = []
+    for i in range(0, word_length):
+        correct_guess.append(empty_guess)
 
-for i in range (0, wordlength):
-    correct_guess.append(empty_guess)
-
-
-# correct_guess[5] = "A"
-# print(correct_guess)
-
-print("I'm thinking of a",wordlength, "letter word.")
-
-
-i = 1
-while i < 10:
+def user_input(guessed_letters):
     while True:
+        global guess_letter
         guess_letter = input("Guess a letter: ").lower()
-        if len(guess_letter) > 1:
+        if len(guess_letter) > 1 or len(guess_letter) == 0:
             print("Greater than 1 character, Try again")
+        elif guess_letter.isalpha() == False:
+            print("You didnt guess a letter!")
+        elif guess_letter in guessed_letters:
+            print("You already guessed that letter")
         else:
             guessed_letters.append(guess_letter)
-            print(", " .join(guessed_letters))
+            return guessed_letters
+            return guess_letter
             break
-    if secret_word.find(guess_letter) == -1:
-        print("Guess again sucka!")
-        i +=1
+
+def print_current(correct, guessed):
+    print("" .join(correct))
+    print(", " .join(guessed))
+
+chooseWord()
+correctGuesses(word_length)
+
+print("I'm thinking of a", word_length ,"letter word.")
+#
+i = 0
+while i < 8:
+    user_input(guessed_letters)
+    indicesForCorrectGuesses = [m.start() for m in re.finditer(guess_letter, secret_word)]
+    if indicesForCorrectGuesses == []:
+        print("You guessed wrong!")
+        print_current(correct_guess, guessed_letters)
+        i += 1
     else:
-        index = secret_word.find(guess_letter)
-        correct_guess[index] = guess_letter
-        print(" ".join(correct_guess))
+        for j in indicesForCorrectGuesses:
+            correct_guess[j] = guess_letter
         if empty_guess in correct_guess:
-            print("You got one!")
+            print("You guessed right!")
+            print_current(correct_guess, guessed_letters)
         else:
-            print("You Win!")
+            print("You win!")
+            print("" .join(correct_guess))
             break
-    if i == 10:
-        print("GAME OVER -- LOSER!!!")
+    if i == 7:
+        print("You lose!  Loser!")
+        print(secret_word)
+        break
