@@ -1,6 +1,7 @@
 import requests
 import random
 import re
+import spacemandrawing
 
 # word_site = "http://svnweb.freebsd.org/csrg/share/dict/words?view=co&content-type=text/plain"
 # response = requests.get(word_site)
@@ -8,7 +9,6 @@ import re
 # random_word = random.choice(words)
 # slicelength = len(random_word)
 guessed_letters = []
-guesses=10
 
 
 
@@ -63,6 +63,7 @@ while i < 8:
     if indicesForCorrectGuesses == []:
         print("You guessed wrong!")
         print_current(correct_guess, guessed_letters)
+        spacemandrawing.drawSpaceMan(i)
         i += 1
     else:
         for j in indicesForCorrectGuesses:
